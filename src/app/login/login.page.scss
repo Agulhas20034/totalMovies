@@ -1,0 +1,25 @@
+.logo-container {
+    text-align: center;
+    margin: 20px 0 30px;
+    
+    .logo-image {
+      max-width: 200px;
+      height: auto;
+      margin: 0 auto;
+    }
+  }
+  
+  ion-card {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .register-link {
+    text-align: center;
+    margin-top: 20px;
+    
+    a {
+      text-decoration: none;
+      font-weight: bold;
+    }
+  }
