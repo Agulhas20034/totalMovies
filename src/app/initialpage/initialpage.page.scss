@@ -1,0 +1,18 @@
+.centered-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    gap: 20px; 
+  }
+  
+  .logo-image {
+    width: min(80%, 400px);
+    height: auto;
+  }
+  
+  .loading-gif {
+    width: min(40%, 120px); 
+    height: auto;
+  }

@@ -4,12 +4,36 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'folder/inbox',
+    redirectTo: 'initialpage',
     pathMatch: 'full'
   },
   {
-    path: 'folder/:id',
-    loadChildren: () => import('./folder/folder.module').then( m => m.FolderPageModule)
+    path: 'initialpage',
+    loadChildren: () => import('./initialpage/initialpage.module').then( m => m.InitialpagePageModule)
+  },
+  {
+    path: 'login',
+    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+  },
+  {
+    path: 'register',
+    loadChildren: () => import('./register/register.module').then( m => m.RegisterPageModule)
+  },
+  {
+    path: 'mainpage',
+    loadChildren: () => import('./mainpage/mainpage.module').then( m => m.MainpagePageModule)
+  },
+  {
+    path: 'searchpage',
+    loadChildren: () => import('./searchpage/searchpage.module').then( m => m.SearchpagePageModule)
+  },
+  {
+    path: 'movieinfo',
+    loadChildren: () => import('./movieinfo/movieinfo.module').then( m => m.MovieinfoPageModule)
+  },
+  {
+    path: 'lists',
+    loadChildren: () => import('./lists/lists.module').then( m => m.ListsPageModule)
   }
 ];
 

@@ -35,3 +35,19 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+:root{
+    body {
+        --ion-color-primary: #3880ff;
+        --ion-background-color: #ffffff;
+        color: #000000;
+        background-color: #ffffff;
+        
+        /* Disable automatic dark mode */
+        @media (prefers-color-scheme: dark) {
+          --ion-color-primary: #3880ff;
+          --ion-background-color: #ffffff;
+          color: #000000;
+          background-color: #ffffff;
+        }
+      }
+}
