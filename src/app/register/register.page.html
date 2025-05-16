@@ -1,13 +1,48 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>register</ion-title>
-  </ion-toolbar>
-</ion-header>
+<!-- register.page.html -->
+<ion-content class="ion-padding">
+  <div class="logo-container">
+    <ion-img src="assets/images/logo.png" alt="TOTALMOVIE" class="logo-image"></ion-img>
+  </div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">register</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-card color="default">
+    <ion-card-header>
+      <ion-card-title style="color: black">Register</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <form (ngSubmit)="register()">
+        <ion-list lines="full" style="
+      --background: white;
+      --ion-item-background: white;
+      --ion-item-color: #333333;
+      --ion-item-border-color: #eeeeee;
+  ">
+          <ion-item>
+            <ion-label position="floating">Name</ion-label>
+            <ion-input type="text" [(ngModel)]="name" name="name" required></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Email</ion-label>
+            <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Password</ion-label>
+            <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
+          </ion-item>
+        </ion-list>
+
+        <ion-button type="submit" expand="block" color="default" [disabled]="isLoading">
+          <ion-spinner *ngIf="isLoading"></ion-spinner>
+          Register
+        </ion-button>
+      </form>
+    </ion-card-content>
+    
+  </ion-card>
+
+  <div class="register-link" >
+      <ion-text style="color: black;">Already have an account? <a href="/login">Sign in</a></ion-text>
+  </div>
 </ion-content>
