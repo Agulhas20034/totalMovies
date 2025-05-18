@@ -42,7 +42,7 @@
         color: #000000;
         background-color: #ffffff;
         
-        /* Disable automatic dark mode */
+        /* Desabilita darkmode forçado dos browsers */
         @media (prefers-color-scheme: dark) {
           --ion-color-primary: #3880ff;
           --ion-background-color: #ffffff;
@@ -50,4 +50,137 @@
           background-color: #ffffff;
         }
       }
+      ion-header{
+        --background: white;
+        --ion-toolbar-background: white;
+        --ion-toolbar-border-color: transparent;
+        ion-toolbar {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: relative; 
+                --background: white;
+                --color: black;
+                
+                &.ios {
+                  --background: white;
+                }
+                ion-buttons {
+                  position: absolute;
+                  left: 0;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  margin-inline-start: 8px;
+                }
+
+                .logo-container {
+                  display: flex;
+                  align-items: center; /* This vertically centers */
+                  justify-content: center; /* This horizontally centers */
+                  height: 100%; /* Takes full toolbar height */
+                  
+                  .logo-image {
+                    height: auto;
+                    max-height: 80%; /* Prevents touching edges */
+                    width: auto;
+                    max-width: 180px; /* Adjust as needed */
+                    object-fit: contain;
+                    margin: auto; /* Extra centering assurance */
+                  }
+                }
+              }
+      }
+      .movie-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        
+        .image-container {
+          position: relative;
+          padding-top: 150%; /* 2:3 aspect ratio */
+          overflow: hidden;
+          
+          ion-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            
+            &::part(image) {
+              transition: transform 0.3s ease;
+            }
+          }
+          
+          &:hover ion-img::part(image) {
+            transform: scale(1.05);
+          }
+        }
+
+        ion-card-header {
+          padding-bottom: 0;
+          
+          ion-card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+          }
+          
+          ion-card-subtitle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            .release-year {
+              color: var(--ion-color-medium);
+              font-size: 0.9rem;
+            }
+          }
+        }
+
+        ion-card-content {
+          flex-grow: 1;
+          padding-top: 0;
+          
+          .movie-overview {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--ion-color-medium);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        }
+      }
+    .heart-icon {
+      font-size: 2rem;
+      transform: rotate(-15deg);
+      transition: all 0.3s ease;
+    }
+    ion-button {
+      --padding-start: 0;
+      --padding-end: 0;
+      --ripple-color: transparent;
+    }
+    ion-button:active .heart-icon {
+      transform: rotate(-15deg) scale(1.2);
+    }
+    .favorite-icon {
+      font-size: 2rem;
+      transition: all 0.3s ease;
+    }
+    ion-button:active .favorite-icon {
+      transform: scale(1.2);
+    }
+    .watch-later-icon {
+      font-size: 2rem;
+      transition: all 0.3s ease;
+    }
+    
+    ion-button:active .watch-later-icon {
+      transform: scale(1.2);
+    }
 }
