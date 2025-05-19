@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { ApiTMDBService } from 'src/app/services/API/api-tmdb.service';
+import { RepoService, UserInfo } from 'src/app/services/repositorio/repo.service';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -6,14 +9,27 @@ import { Component } from '@angular/core';
   standalone: false,
 })
 export class AppComponent {
+  currentUser$ = this.repoService.getCurrentUser$();
+  isUserDataLoaded = false;
+
+  constructor(private repoService: RepoService) {
+    this.initializeUserData();
+  }
+
+  private async initializeUserData() {
+    try {
+      this.isUserDataLoaded = true;
+    } catch (error) {
+      console.error('Error initializing:', error);
+      this.isUserDataLoaded = true;
+    }
+  }
+
+  // Rest of your existing code...
   public appPages = [
-    { title: 'Inbox', url: '/folder/inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/outbox', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/spam', icon: 'warning' },
+    { title: 'Main Page', url: '/mainpage', icon: 'mail' },
+    { title: 'Liked', url: '', icon: 'heart' },
+    { title: 'Favorites', url: '', icon: 'star' },
+    { title: 'Watch Later', url: '', icon: 'archive' },
   ];
-  public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-  constructor() {}
 }

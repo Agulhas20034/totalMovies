@@ -31,10 +31,7 @@ const routes: Routes = [
     path: 'movieinfo',
     loadChildren: () => import('./movieinfo/movieinfo.module').then( m => m.MovieinfoPageModule)
   },
-  {
-    path: 'lists',
-    loadChildren: () => import('./lists/lists.module').then( m => m.ListsPageModule)
-  }
+  
 ];
 
 @NgModule({

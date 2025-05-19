@@ -1,13 +1,70 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>movieinfo</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ movie?.title || 'Movie Details' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">movieinfo</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && movie">
+
+    <ion-card class="movie-card">
+      <ion-card-header>
+        
+        <ion-card-subtitle>
+          {{ movie.release_date | date:'yyyy' }} • {{ movie.runtime }} mins • {{ getGenres() }}
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="poster-container">
+          <ion-img 
+            [src]="getPosterImage()" 
+            [alt]="movie.title + ' poster'"
+            (ionError)="handleImageError($event, 'poster')">
+          </ion-img>
+        </div>
+
+        <div class="details-container">
+          <h3>Overview</h3>
+          <p>{{ movie.overview || 'No overview available' }}</p>
+
+          <div *ngIf="movie.vote_average" class="rating">
+            <ion-icon name="star" color="warning"></ion-icon>
+            <span>{{ movie.vote_average.toFixed(1) }}/10 ({{ movie.vote_count }} votes)</span>
+          </div>
+
+          <ion-button expand="block" style="--background: white; --color: black;"(click)="toggleLike(movie.id)">
+            <ion-icon 
+              [name]="isLiked(movie.id) ? 'heart' : 'heart-outline'" 
+              [color]="isLiked(movie.id) ? 'danger' : 'medium'">
+            </ion-icon>
+            <span>{{ isLiked(movie.id) ? 'Liked' : 'Like' }}</span>
+          </ion-button>
+          <br>
+          <ion-button expand="block"style="--background: white; --color: black;" (click)="toggleFavorite(movie.id)">
+            <ion-icon 
+              [name]="isFavorite(movie.id) ? 'star' : 'star-outline'"
+              [color]="isFavorite(movie.id) ? 'warning' : 'medium'">
+            </ion-icon>
+            <span>{{ isFavorite(movie.id) ? 'Favorited' : 'Favorite' }}</span>
+          </ion-button>
+          <br>
+          <ion-button expand="block" style="--background: white; --color: black;"(click)="toggleWatchLater(movie.id)">
+            <ion-icon 
+              [name]="isWatchLater(movie.id) ? 'bookmark' : 'bookmark-outline'"
+              [color]="isWatchLater(movie.id) ? 'secondary' : 'medium'">
+            </ion-icon>
+            <span>{{ isWatchLater(movie.id) ? 'Saved' : 'Watch Later' }}</span>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

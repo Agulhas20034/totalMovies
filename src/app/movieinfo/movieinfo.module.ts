@@ -1,17 +1,12 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-
 import { IonicModule } from '@ionic/angular';
-
-import { MovieinfoPageRoutingModule } from './movieinfo-routing.module';
-
 import { MovieinfoPage } from './movieinfo.page';
+import { MovieinfoPageRoutingModule } from './movieinfo-routing.module';
 
 @NgModule({
   imports: [
     CommonModule,
-    FormsModule,
     IonicModule,
     MovieinfoPageRoutingModule
   ],

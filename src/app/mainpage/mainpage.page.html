@@ -15,8 +15,8 @@
 </ion-header>
 
 <ion-content>
-  <ion-card class="ion-card" button *ngFor="let item of movies">
-    
+  <ion-card class="ion-card"  *ngFor="let item of movies" >
+    <div (click)="openMovieInfo(item.id)">
     <div class="image-container">
         <ion-img 
           [src]="getImagePath(item.poster_path)"
@@ -29,31 +29,30 @@
     </ion-card-header>
     <ion-card-content>
         {{ item.overview }}
-        <br>
-        <ion-button (click)="toggleLike()" fill="clear" [attr.aria-pressed]="isLiked">
-          <ion-icon 
-            [name]="isLiked ? 'heart' : 'heart-outline'" 
-            [color]="isLiked ? 'danger' : 'medium'"
-            class="heart-icon"
-          ></ion-icon>
-        </ion-button>
-        <ion-button (click)="toggleFavorite()" fill="clear" [attr.aria-pressed]="isFavorite">
-          <ion-icon 
-            [name]="isFavorite ? 'star' : 'star-outline'" 
-            [color]="isFavorite ? 'warning' : 'medium'"
-            class="favorite-icon"
-          ></ion-icon>
-        <ion-button (click)="toggleWatchLater()" fill="clear" [attr.aria-pressed]="isWatchLater">
-          <ion-icon 
-            [name]="isWatchLater ? 'bookmark' : 'bookmark-outline'" 
-            [color]="isWatchLater ? 'primary' : 'medium'"
-            class="watch-later-icon"
-          ></ion-icon>
-          <!-- Alternative icon option: -->
-          <!-- [name]="isWatchLater ? 'time' : 'time-outline'" -->
-        </ion-button>
-      </ion-button>
     </ion-card-content>
+    </div>
+    <div>
+    <ion-button (click)="toggleLike(item.id)" fill="clear">
+      <ion-icon 
+        [name]="isLiked(item.id) ? 'heart' : 'heart-outline'" 
+        [color]="isLiked(item.id) ? 'danger' : 'medium'"
+      ></ion-icon>
+    </ion-button>
+
+    <ion-button (click)="toggleFavorite(item.id)" fill="clear">
+      <ion-icon 
+        [name]="isFavorite(item.id) ? 'star' : 'star-outline'" 
+        [color]="isFavorite(item.id) ? 'warning' : 'medium'"
+      ></ion-icon>
+    </ion-button>
+
+    <ion-button (click)="toggleWatchLater(item.id)" fill="clear">
+      <ion-icon 
+        [name]="isWatchLater(item.id) ? 'bookmark' : 'bookmark-outline'" 
+        [color]="isWatchLater(item.id) ? 'primary' : 'medium'"
+      ></ion-icon>
+    </ion-button>
+    </div>
   </ion-card>
   <ion-infinite-scroll (ionInfinite)="loadMore($event)">
     <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more data..."></ion-infinite-scroll-content>

@@ -1,9 +1,13 @@
-import { Component, OnInit,Input, Output,EventEmitter } from '@angular/core';
-import { InfiniteScrollCustomEvent, IonInfiniteScroll, LoadingController } from '@ionic/angular';
+import { Component, OnInit } from '@angular/core';
+import { InfiniteScrollCustomEvent, LoadingController } from '@ionic/angular';
 import { ApiTMDBService, Result } from 'src/app/services/API/api-tmdb.service';
 import { environment } from 'src/environments/environment';
+import { RepoService } from 'src/app/services/repositorio/repo.service';
+import { Router } from '@angular/router';
+import { MenuController } from '@ionic/angular';
+import { firstValueFrom } from 'rxjs';
 @Component({
-  standalone: false,
+  standalone:false,
   selector: 'app-mainpage',
   templateUrl: './mainpage.page.html',
   styleUrls: ['./mainpage.page.scss'],
@@ -12,65 +16,144 @@ export class MainpagePage implements OnInit {
   movies: Result[] = [];
   currentPage = 1;
   imagebaseurl = environment.images;
-  constructor(private movieService: ApiTMDBService, private loadingCtrl: LoadingController) { }
-  @Input() isLiked: boolean = false;
-  @Output() liked = new EventEmitter<boolean>();
-  @Input() isFavorite: boolean = false;
-  @Output() favorited = new EventEmitter<boolean>();
-  @Input() isWatchLater: boolean = false;
-  @Output() watchLater = new EventEmitter<boolean>();
-  ngOnInit() {
-    this.loadMovies();
-  }
+  currentUserId: number | null = null;
 
-  async loadMovies(event?: InfiniteScrollCustomEvent){
-  //Função para dar um pequeno efeito de load enquanto carrega items para o ecra
+  constructor(
+    //Variavel do injetavel do serviço da api
+    private movieService: ApiTMDBService, 
+    //Variavel do import para loading infinito
+    private loadingCtrl: LoadingController,
+    //Variavel do injetavel do serviço do repo
+    private repoService: RepoService,
+    //Variavel do import do redirecionamento
+    private router: Router,
+    private menu: MenuController,
+  ) { }
+  
+  async ngOnInit() {
+    const user = await firstValueFrom(this.repoService.getCurrentUser$());
+    this.currentUserId = user?.id || null;
+    this.ionViewWillEnter();
+    if(user == null){
+      this.router.navigate(['/login']);
+    }
+    this.currentUserId = user?.id || null;
+    await this.loadMovies();
+  }
+  //Habilita sidemenu
+  ionViewWillEnter() {
+    this.menu.enable(true);
+  }
+  async loadMovies(event?: InfiniteScrollCustomEvent) {
+    //Cria um pequeno loading enquanto carrega
     const loading = await this.loadingCtrl.create({
-      message:'Loading ..',
+      message: 'Loading...',
       spinner: 'bubbles',
-   });
-   await loading.present();
-    this.movieService.getTopRatedMovies(this.currentPage).subscribe((res) =>{
-      //Para o loading quando os dados ja estiverem prontos a ser editados e mostrados  
+    });
+    await loading.present();
+
+    this.movieService.getTopRatedMovies(this.currentPage).subscribe(async (res) => {
+      //Para o loading
       loading.dismiss();
-      //Adiciona todos os elementos do array results ao array movies(para caso de ja la existirem items,
-      //assim evita conflitos)
-      this.movies = [...this.movies, ...res.results];
-      console.log(res);
+      
+      //Para caso de carregar mais filmes no ecra, adiciona os gerados á lista existente
+      const newMovies = res.results.filter(newMovie => 
+        !this.movies.some(existingMovie => existingMovie.id === newMovie.id)
+      );
+      this.movies = [...this.movies, ...newMovies];
+      
+      // Verifica o status
+      await this.checkMoviesStatus();
+      //Da evento como completo
       event?.target.complete();
     });
   }
+  //Força deteccao de mudanças nos dados para o angular atualizar quaze instantaneamente
+  async checkMoviesStatus() {
+    //Atribui ao array existente um array com exatamente os mesmos dados para forçar update
+    this.movies = [...this.movies];
+  }
 
+  //Verifica se o filme esta na lista de liked do user
+  isLiked(movieId: number): boolean {
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return false;
+    //Carrega a lista
+    const list = this.repoService.getLikedList(this.currentUserId);
+    //Verifica a lista
+    return list?.items.includes(movieId.toString()) || false;
+  }
+
+  //Verifica se o filme esta na lista de favourite do user
+  isFavorite(movieId: number): boolean {
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return false;
+    //Carrega a lista
+    const list = this.repoService.getFavouritesList(this.currentUserId);
+    //Verifica a lista
+    return list?.items.includes(movieId.toString()) || false;
+  }
+
+  //Verifica se o filme esta na lista de watchlater do user
+  isWatchLater(movieId: number): boolean {
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return false;
+    //Carrega a lista
+    const list = this.repoService.getWatchLaterList(this.currentUserId);
+    //Verifica a lista
+    return list?.items.includes(movieId.toString()) || false;
+  }
+
+  // Da toggle individual ao icone de favourites do filme indicado se estiver na lista
+  async toggleLike(movieId: number) {
+    console.log("clicked");
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return;
+    console.log("past here");
+    //Se ja estiver na lista retira, senao adiciona
+    await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString());
+    //Força update
+    await this.checkMoviesStatus();
+  }
+
+  // Da toggle individual ao icone de favourites do filme indicado se estiver na lista
+  async toggleFavorite(movieId: number) {
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return;    
+    //Se ja estiver na lista retira, senao adiciona 
+    await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString());
+    //Força update
+    await this.checkMoviesStatus();
+  }
+
+  // Da toggle individual ao icone de watch later do filme indicado se estiver na lista
+  async toggleWatchLater(movieId: number) {
+    //Verifica se ha user loggado
+    if (!this.currentUserId) return;
+    //Se ja estiver na lista retira, senao adiciona
+    await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString());
+    //Força update
+    await this.checkMoviesStatus();
+  }
+  //Indica string com o caminho para ir buscar a imagem a api
   getImagePath(posterPath: string | null): string {
     return this.movieService.getFullImagePath(posterPath);
   }
-
+  //Fallback pra caso filme nao tenha imagem valida
   handleImageError(event: any) {
+    //Caminho para imagem default
     event.target.src = 'assets/images/no-poster.jpg';
     event.target.style.objectFit = 'contain'; 
   }
-
-  loadMore(event: InfiniteScrollCustomEvent){
+  //Func para carregar mais filmes quando der trigger ao evento
+  loadMore(event: InfiniteScrollCustomEvent) {
+    //Incrementa pagina atual
     this.currentPage++;
-    this.loadMovies();
+    //Carrega filmes
+    this.loadMovies(event);
   }
-
-  
-
-  toggleLike() {
-    this.isLiked = !this.isLiked;
-    this.liked.emit(this.isLiked);
-  }
-   
-
-  toggleFavorite() {
-    this.isFavorite = !this.isFavorite;
-    this.favorited.emit(this.isFavorite);
-  }
-  
-
-  toggleWatchLater() {
-    this.isWatchLater = !this.isWatchLater;
-    this.watchLater.emit(this.isWatchLater);
+  //Func para redirecionar para pagina do filme
+  openMovieInfo(movieId: number) {
+    this.router.navigate(['/movieinfo', movieId]);
   }
 }

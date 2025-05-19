@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { RepoService } from 'src/app/services/repositorio/repo.service';
+import { MenuController } from '@ionic/angular';
 
 @Component({
   standalone: false,
@@ -9,7 +10,7 @@ import { RepoService } from 'src/app/services/repositorio/repo.service';
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
 })
-export class LoginPage {
+export class LoginPage implements OnInit{
   email: string = '';
   password: string = '';
   isLoading: boolean = false;
@@ -17,9 +18,16 @@ export class LoginPage {
   constructor(
     private repoService: RepoService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private menu: MenuController,
   ) {}
-
+  ngOnInit(): void {
+      this.ionViewWillEnter();
+  }
+  //Desabilita sidemenu
+  ionViewWillEnter() {
+    this.menu.enable(false);
+  }
   async login() {
     //Verifica se campos estao vazios
     if (!this.email || !this.password) {

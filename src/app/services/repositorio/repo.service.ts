@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
 import * as CordovaSQLiteDriver from 'localforage-cordovasqlitedriver';
-
+import { BehaviorSubject } from 'rxjs';
 export interface Lista {
     id: number;
     id_user: number;
@@ -19,6 +19,7 @@ export interface Reviews {
 
 export interface UserInfo {
     id: number;
+    name: string;
     email: string;
     password: string;
 }
@@ -35,8 +36,8 @@ export interface BD {
 export class RepoService {
     private bd: BD = { listas: [], userinfo: [],reviews: []};
     private storageInitialized = false;
-    private currentUser: UserInfo | null = null;
-
+    private currentUser$ = new BehaviorSubject<UserInfo | null>(null);
+    
     constructor(private storage: Storage) {
         this.init();
     }
@@ -61,7 +62,7 @@ export class RepoService {
         return Date.now();
     }
 
-    async insertUser(user: { email: string, password: string }): Promise<{ success: boolean, userId?: number }> {
+    async insertUser(user: { name:string,email: string, password: string }): Promise<{ success: boolean, userId?: number }> {
         try {
             await this.init();
             
@@ -75,6 +76,7 @@ export class RepoService {
             // Cria novo user
             const newUser: UserInfo = {
                 id: this.getCurrentTimestamp(),
+                name: user.name,
                 email: user.email,
                 password: user.password
             };
@@ -199,18 +201,18 @@ export class RepoService {
     }
 
     // Define user atualmente loggado
-    setCurrentUser(user: UserInfo): void {
-        this.currentUser = user;
+    setCurrentUser(user: UserInfo | null) {
+        this.currentUser$.next(user);
     }
 
     // Devolve user loggado atualmente
-    getCurrentUser(): UserInfo | null {
-        return this.currentUser;
-    }
+    getCurrentUser$() {
+    return this.currentUser$.asObservable();
+  }
 
     // Limpa variavel de user loggado atualmente
     clearCurrentUser(): void {
-        this.currentUser = null;
+        this.setCurrentUser(null);
     }
 
     //Verifica se email inserido existe
@@ -218,5 +220,6 @@ export class RepoService {
         await this.init(); // Ensure storage is loaded
         return this.bd.userinfo.some(user => user.email === email);
     }
+    
     
 }

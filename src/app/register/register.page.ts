@@ -1,8 +1,9 @@
-// register.page.ts
-import { Component } from '@angular/core';
+
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { RepoService } from 'src/app/services/repositorio/repo.service';
+import { MenuController } from '@ionic/angular';
 
 @Component({
   standalone:false,
@@ -10,7 +11,7 @@ import { RepoService } from 'src/app/services/repositorio/repo.service';
   templateUrl: './register.page.html',
   styleUrls: ['./register.page.scss'],
 })
-export class RegisterPage {
+export class RegisterPage implements OnInit{
   name: string = '';
   email: string = '';
   password: string = '';
@@ -19,8 +20,16 @@ export class RegisterPage {
   constructor(
     private repoService: RepoService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private menu: MenuController,
   ) {}
+  ngOnInit(): void {
+      this.ionViewWillEnter();
+  }
+  //Desabilita sidemenu
+  ionViewWillEnter() {
+    this.menu.enable(false);
+  }
 
   async register() {
     // Valida campos
@@ -41,6 +50,7 @@ export class RegisterPage {
       // Cria novo user
       const result = await this.repoService.insertUser({
         email: this.email,
+        name: this.name,
         password: this.password
       });
 
