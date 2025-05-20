@@ -55,7 +55,7 @@ export class ApiTMDBService {
   }
 
   getFullImagePath(posterPath: string | null): string {
-    return posterPath ? environment.images + "/w92" + posterPath : 'assets/no-poster.jpg';
+    return posterPath ? environment.images + "/w500" + posterPath : 'assets/no-poster.jpg';
   }
   
 }

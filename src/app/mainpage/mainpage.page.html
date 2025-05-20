@@ -31,27 +31,27 @@
         {{ item.overview }}
     </ion-card-content>
     </div>
-    <div>
-    <ion-button (click)="toggleLike(item.id)" fill="clear">
-      <ion-icon 
-        [name]="isLiked(item.id) ? 'heart' : 'heart-outline'" 
-        [color]="isLiked(item.id) ? 'danger' : 'medium'"
-      ></ion-icon>
-    </ion-button>
+    <div style="display: flex; justify-content: center; gap: 8px;">
+      <ion-button (click)="toggleLike(item.id)" fill="clear">
+        <ion-icon 
+          [name]="isLiked(item.id) ? 'heart' : 'heart-outline'" 
+          [color]="isLiked(item.id) ? 'danger' : 'medium'"
+        ></ion-icon>
+      </ion-button>
 
-    <ion-button (click)="toggleFavorite(item.id)" fill="clear">
-      <ion-icon 
-        [name]="isFavorite(item.id) ? 'star' : 'star-outline'" 
-        [color]="isFavorite(item.id) ? 'warning' : 'medium'"
-      ></ion-icon>
-    </ion-button>
+      <ion-button (click)="toggleFavorite(item.id)" fill="clear">
+        <ion-icon 
+          [name]="isFavorite(item.id) ? 'star' : 'star-outline'" 
+          [color]="isFavorite(item.id) ? 'warning' : 'medium'"
+        ></ion-icon>
+      </ion-button>
 
-    <ion-button (click)="toggleWatchLater(item.id)" fill="clear">
-      <ion-icon 
-        [name]="isWatchLater(item.id) ? 'bookmark' : 'bookmark-outline'" 
-        [color]="isWatchLater(item.id) ? 'primary' : 'medium'"
-      ></ion-icon>
-    </ion-button>
+      <ion-button (click)="toggleWatchLater(item.id)" fill="clear">
+        <ion-icon 
+          [name]="isWatchLater(item.id) ? 'bookmark' : 'bookmark-outline'" 
+          [color]="isWatchLater(item.id) ? 'primary' : 'medium'"
+        ></ion-icon>
+      </ion-button>
     </div>
   </ion-card>
   <ion-infinite-scroll (ionInfinite)="loadMore($event)">

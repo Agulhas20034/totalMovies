@@ -3,7 +3,6 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ movie?.title || 'Movie Details' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -16,7 +15,8 @@
 
     <ion-card class="movie-card">
       <ion-card-header>
-        
+        <ion-card-title>{{ movie?.title || 'Movie Details' }}</ion-card-title>
+        <br><br>
         <ion-card-subtitle>
           {{ movie.release_date | date:'yyyy' }} • {{ movie.runtime }} mins • {{ getGenres() }}
         </ion-card-subtitle>
@@ -25,10 +25,10 @@
       <ion-card-content>
         <div class="poster-container">
           <ion-img 
-            [src]="getPosterImage()" 
+            [src]="getImagePath(movie.poster_path)"
             [alt]="movie.title + ' poster'"
-            (ionError)="handleImageError($event, 'poster')">
-          </ion-img>
+            (ionError)="handleImageError($event)"
+          ></ion-img>
         </div>
 
         <div class="details-container">

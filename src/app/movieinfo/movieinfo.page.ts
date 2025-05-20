@@ -55,10 +55,9 @@ export class MovieinfoPage implements OnInit {
       : 'assets/images/no-backdrop.jpg';
   }
 
-  getPosterImage(): string {
-    return this.movie?.poster_path
-      ? `${this.imageBaseUrl}/w500${this.movie.poster_path}`
-      : 'assets/images/no-poster.jpg';
+  //Indica string com o caminho para ir buscar a imagem a api
+  getImagePath(posterPath: string | null): string {
+    return this.movieService.getFullImagePath(posterPath);
   }
 
   getGenres(): string {
@@ -70,13 +69,10 @@ export class MovieinfoPage implements OnInit {
     this.menu.enable(true);
   }
   //Fallback pra caso filme nao tenha imagem valida
-  handleImageError(event: any, imageType: 'backdrop' | 'poster') {
-    if (imageType === 'backdrop') {
-      event.target.src = 'assets/images/no-backdrop.jpg';
-    } else {
-      event.target.src = 'assets/images/no-poster.jpg';
-    }
-    event.target.style.objectFit = 'contain';
+  handleImageError(event: any) {
+    //Caminho para imagem default
+    event.target.src = 'assets/images/no-poster.jpg';
+    event.target.style.objectFit = 'contain'; 
   }
   //Verifica se o filme esta na lista de liked do user
   isLiked(movieId: number): boolean {
