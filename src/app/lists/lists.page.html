@@ -1,21 +1,73 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>{{ listType | titlecase }} Movies</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content>
-  <div *ngIf="isLoading" class="loading-spinner">
-    <!-- Add your loading spinner here -->
-    Loading...
-  </div>
+  <div class="list-container ion-padding">
+    
+    
+    <div class="list-header">
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <h1 class="list-title">
+        <span style="color:black" *ngIf="listType === 'liked'">❤️ Liked Movies</span>
+        <span style="color:black"*ngIf="listType === 'favorites'">⭐ Favorite Movies</span>
+        <span style="color:black"*ngIf="listType === 'watch-later'">⏱️ Watch Later Movies</span>
+      </h1>
+      <ion-badge color="light" class="counter-badge">{{ movies.length }} movies</ion-badge>
+    </div>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-spinner">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading your movies...</p>
+    </div>
 
-  <ion-list *ngIf="!isLoading">
-    <ion-item *ngFor="let movie of movies">
-      <ion-label>
-        <h2>{{ movie.title }}</h2>
-        <p>{{ movie.release_date | date:'yyyy' }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+    <!-- Movie grid -->
+    <ion-grid *ngIf="!isLoading" class="movie-grid">
+      <ion-row>
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let movie of movies">
+          <ion-card class="movie-card">
+            <!-- Clickable movie info area -->
+            <div class="clickable-area" (click)="openMovieInfo(movie.id)">
+              <img [src]="movie.poster_path ? movieService.getFullImagePath(movie.poster_path) : 'assets/images/no-poster.jpg'"
+                   (error)="handleImageError($event)" class="movie-poster" alt="{{ movie.title }} poster">
+              
+              <ion-card-header>
+                <ion-card-title class="movie-title">{{ movie.title }}</ion-card-title>
+                <ion-card-subtitle class="movie-year">{{ formatYear(movie.release_date) }}</ion-card-subtitle>
+              </ion-card-header>
+            </div>
+
+            <ion-card-content>
+              <div class="action-buttons">
+                <ion-button fill="clear" (click)="toggleLike(movie); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isLiked(movie.id) ? 'heart' : 'heart-outline'" 
+                           [color]="isLiked(movie.id) ? 'danger' : 'medium'"></ion-icon>
+                </ion-button>
+                
+                <ion-button fill="clear" (click)="toggleFavorite(movie); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isFavorite(movie.id) ? 'star' : 'star-outline'"
+                           [color]="isFavorite(movie.id) ? 'warning' : 'medium'"></ion-icon>
+                </ion-button>
+                
+                <ion-button fill="clear" (click)="toggleWatchLater(movie); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isWatchLater(movie.id) ? 'time' : 'time-outline'"
+                           [color]="isWatchLater(movie.id) ? 'primary' : 'medium'"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <!-- Empty state -->
+      <div *ngIf="!isLoading && movies.length === 0" class="empty-state">
+        <ion-icon name="film-outline" class="empty-icon"></ion-icon>
+        <h3 style="color:black">No movies here yet</h3>
+        <p style="color:black">Start adding movies to your {{ 
+          listType === 'liked' ? 'Liked' : 
+          listType === 'favorites' ? 'Favorites' : 
+          'Watch Later' 
+        }} list</p>
+      </div>
+    </ion-grid>
+  </div>
 </ion-content>

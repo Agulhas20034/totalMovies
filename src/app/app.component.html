@@ -9,10 +9,11 @@
           @for (p of appPages; track p) {
             <ion-menu-toggle auto-hide="false">
               <ion-item 
-                (click)="handleNavigation(p.url)"
+                (click)="handleNavigation(p)"
                 lines="none"
                 detail="false"
-                [routerLinkActive]="['selected']">
+                [routerLink]="p.url || null"
+                [routerLinkActive]="p.url ? 'selected' : ''">
                 <ion-icon 
                   aria-hidden="true" 
                   slot="start" 
