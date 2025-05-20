@@ -15,7 +15,6 @@ import { firstValueFrom } from 'rxjs';
 export class MainpagePage implements OnInit {
   movies: Result[] = [];
   currentPage = 1;
-  imagebaseurl = environment.images;
   currentUserId: number | null = null;
 
   constructor(

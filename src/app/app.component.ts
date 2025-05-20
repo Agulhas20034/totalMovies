@@ -18,6 +18,7 @@ export class AppComponent {
 
   public appPages = [
     { title: 'Main Page', url: '/mainpage', icon: 'home' },
+    { title: 'Search', url: '/searchpage', icon: 'search' },
     { title: 'Liked', url: '/lists/liked', icon: 'heart' },
     { title: 'Favorites', url: '/lists/favorites', icon: 'star' },
     { title: 'Watch Later', url: '/lists/watch-later', icon: 'time' },

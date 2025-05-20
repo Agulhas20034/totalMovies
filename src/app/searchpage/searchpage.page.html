@@ -1,13 +1,120 @@
-<ion-header [translucent]="true">
+<ion-header>
+  
   <ion-toolbar>
-    <ion-title>searchpage</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Search Movies</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">searchpage</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <form [formGroup]="searchForm" (ngSubmit)="searchMovies()">
+    <ion-searchbar style="color:black;"
+      formControlName="query" 
+      placeholder="Search for movies..." 
+      animated
+      debounce="500">
+    </ion-searchbar>
+
+    <ion-accordion-group>
+      <ion-accordion value="filters">
+        <ion-item slot="header">
+          <ion-label>Filters</ion-label>
+        </ion-item>
+        <div slot="content">
+          <ion-item>
+            <ion-label position="stacked">Year</ion-label>
+            <ion-input type="number" formControlName="year" placeholder="2023"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Genre</ion-label>
+            <ion-select formControlName="genre" placeholder="Select genre">
+              <ion-select-option *ngFor="let genre of genres" [value]="genre.id">
+                {{ genre.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Language</ion-label>
+            <ion-select formControlName="language" placeholder="Select language">
+              <ion-select-option value="en">English</ion-select-option>
+              <ion-select-option value="es">Spanish</ion-select-option>
+              <ion-select-option value="fr">French</ion-select-option>
+              <!-- Add more languages as needed -->
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Minimum Rating</ion-label>
+            <ion-range formControlName="rating" min="0" max="10" step="1" snaps>
+              <ion-label slot="start">0</ion-label>
+              <ion-label slot="end">10</ion-label>
+            </ion-range>
+          </ion-item>
+
+          <ion-button expand="block" fill="clear" (click)="clearFilters()">
+            Clear Filters
+          </ion-button>
+        </div>
+      </ion-accordion>
+    </ion-accordion-group>
+
+    <ion-button expand="block" type="submit" [disabled]="isLoading">
+      <ion-spinner *ngIf="isLoading"></ion-spinner>
+      <span *ngIf="!isLoading">Search</span>
+    </ion-button>
+  </form>
+
+
+  <div *ngIf="searchResults.length > 0" class="ion-padding">
+    <ion-card *ngFor="let movie of searchResults" class="movie-card">
+      <div (click)="openMovieInfo(movie.id)">
+      <div class="image-container">
+          <ion-img 
+            [src]="getImagePath(movie.poster_path)"
+            [alt]="movie.title + ' poster'"
+            (ionError)="handleImageError($event)"
+          ></ion-img>
+      </div>
+      <ion-card-header>
+        <ion-card-title>{{ movie.title }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+          {{ movie.overview }}
+      </ion-card-content>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 8px;">
+        <ion-button (click)="toggleLike(movie.id)" fill="clear">
+          <ion-icon 
+            [name]="isLiked(movie.id) ? 'heart' : 'heart-outline'" 
+            [color]="isLiked(movie.id) ? 'danger' : 'medium'"
+          ></ion-icon>
+        </ion-button>
+
+        <ion-button (click)="toggleFavorite(movie.id)" fill="clear">
+          <ion-icon 
+            [name]="isFavorite(movie.id) ? 'star' : 'star-outline'" 
+            [color]="isFavorite(movie.id) ? 'warning' : 'medium'"
+          ></ion-icon>
+        </ion-button>
+
+        <ion-button (click)="toggleWatchLater(movie.id)" fill="clear">
+          <ion-icon 
+            [name]="isWatchLater(movie.id) ? 'bookmark' : 'bookmark-outline'" 
+            [color]="isWatchLater(movie.id) ? 'primary' : 'medium'"
+          ></ion-icon>
+        </ion-button>
+      </div>
+    </ion-card>
+  </div>
+
+  <!-- Display when no search has been made -->
+  <div *ngIf="!hasSearched" class="ion-padding ion-text-center">
+    <ion-icon name="search-outline" style="font-size: 64px; color: var(--ion-color-medium)"></ion-icon>
+    <h3 style="color: black;">Search for movies</h3>
+    <p>Use the search bar above to find your favorite movies</p>
+  </div>
 </ion-content>

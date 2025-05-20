@@ -1,0 +1,53 @@
+ion-content {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+form {
+  ion-searchbar {
+    padding: 0;
+    margin-bottom: 16px;
+  }
+
+  ion-accordion-group {
+    margin-bottom: 16px;
+  }
+
+  ion-button[type="submit"] {
+    margin-top: 16px;
+  }
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  text-align: center;
+  margin: 16px 0;
+}
+
+ion-list {
+  margin-top: 24px;
+
+  ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    margin-bottom: 12px;
+
+    ion-thumbnail {
+      --size: 80px;
+      --border-radius: 8px;
+      overflow: hidden;
+    }
+
+    h2 {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    p {
+      color: var(--ion-color-medium);
+      font-size: 14px;
+    }
+  }
+}

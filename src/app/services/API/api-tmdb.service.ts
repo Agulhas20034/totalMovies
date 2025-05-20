@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { Observable } from 'rxjs';
@@ -61,4 +61,45 @@ export class ApiTMDBService {
     return posterPath ? environment.images + "/w500" + posterPath : 'assets/no-poster.jpg';
   }
   
+  searchMovies(params: {
+    query: string;
+    year?: string;
+    with_genres?: string;
+    language?: string;
+    'vote_average.gte'?: string;
+    page?: number
+  }): Observable<any> {
+    // Set up default parameters
+    let httpParams = new HttpParams()
+      .set('api_key', environment.apiKey)
+      .set('query', params.query)
+      .set('include_adult', 'false');
+
+    // Add optional parameters if they exist
+    if (params.year) {
+      httpParams = httpParams.set('year', params.year);
+    }
+    if (params.with_genres) {
+      httpParams = httpParams.set('with_genres', params.with_genres);
+    }
+    if (params.language) {
+      httpParams = httpParams.set('language', params.language);
+    }
+    if (params['vote_average.gte']) {
+      httpParams = httpParams.set('vote_average.gte', params['vote_average.gte']);
+    }
+    if (params.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+
+    return this.http.get(`${environment.baseUrl}/search/movie`, { params: httpParams });
+  }
+
+  getGenres(): Observable<any> {
+    return this.http.get(`${environment.baseUrl}/genre/movie/list?api_key=${environment.apiKey}`);
+  }
+
+  getLanguages(): Observable<any> {
+    return this.http.get(`${environment.baseUrl}/configuration/languages?api_key=${environment.apiKey}`);
+  }
 }
