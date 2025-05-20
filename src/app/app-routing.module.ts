@@ -9,29 +9,36 @@ const routes: Routes = [
   },
   {
     path: 'initialpage',
-    loadChildren: () => import('./initialpage/initialpage.module').then( m => m.InitialpagePageModule)
+    loadChildren: () => import('./initialpage/initialpage.module').then(m => m.InitialpagePageModule)
   },
   {
     path: 'login',
-    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'register',
-    loadChildren: () => import('./register/register.module').then( m => m.RegisterPageModule)
+    loadChildren: () => import('./register/register.module').then(m => m.RegisterPageModule)
   },
   {
     path: 'mainpage',
-    loadChildren: () => import('./mainpage/mainpage.module').then( m => m.MainpagePageModule)
+    loadChildren: () => import('./mainpage/mainpage.module').then(m => m.MainpagePageModule)
   },
   {
     path: 'searchpage',
-    loadChildren: () => import('./searchpage/searchpage.module').then( m => m.SearchpagePageModule)
+    loadChildren: () => import('./searchpage/searchpage.module').then(m => m.SearchpagePageModule)
   },
   {
     path: 'movieinfo',
-    loadChildren: () => import('./movieinfo/movieinfo.module').then( m => m.MovieinfoPageModule)
+    loadChildren: () => import('./movieinfo/movieinfo.module').then(m => m.MovieinfoPageModule)
   },
-  
+  {
+  path: 'lists/:listType',
+    loadChildren: () => import('./lists/lists.module').then(m => m.ListsPageModule)
+  },
+  {
+    path: '**',
+    redirectTo: 'initialpage'
+  }
 ];
 
 @NgModule({

@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ listType | titlecase }} Movies</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <!-- Add your loading spinner here -->
+    Loading...
+  </div>
+
+  <ion-list *ngIf="!isLoading">
+    <ion-item *ngFor="let movie of movies">
+      <ion-label>
+        <h2>{{ movie.title }}</h2>
+        <p>{{ movie.release_date | date:'yyyy' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

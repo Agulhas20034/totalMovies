@@ -47,6 +47,9 @@ export class ApiTMDBService {
       `${environment.baseUrl}/movie/${id}?api_key=${environment.apiKey}`
     );
   }
+  getMovieDetailsO(id: string): Observable<Result> {
+    return this.http.get<Result>(`${environment.baseUrl}/movie/${id}`);
+}
 
   getMovieimageDetails(id:string){
     return this.http.get(
