@@ -6,20 +6,22 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { MenuController } from '@ionic/angular';
 import { RepoService } from '../services/repositorio/repo.service';
+
 @Component({
-  standalone:false,
+  standalone: false,
   selector: 'app-searchpage',
   templateUrl: './searchpage.page.html',
   styleUrls: ['./searchpage.page.scss'],
 })
-export class SearchpagePage implements OnInit{
+export class SearchpagePage implements OnInit {
   searchForm: FormGroup;
   movies: Result[] = [];
   searchResults: any[] = [];
   isLoading = false;
+  // Add this property to your component
+  currentYear = new Date().getFullYear();
   errorMessage = '';
-
-  // Available filters
+  mediaType: 'movie' | 'tv' = 'movie'; // Default to movies
   filters = {
     year: '',
     genre: '',
@@ -28,13 +30,7 @@ export class SearchpagePage implements OnInit{
   };
   hasSearched = false;
   currentUserId: number | null = null;
-  // Example genres (you should get these from your API)
-  genres = [
-    { id: 28, name: 'Action' },
-    { id: 12, name: 'Adventure' },
-    { id: 16, name: 'Animation' },
-    // Add more genres as needed
-  ];
+  genres: any[] = [];
 
   constructor(
     private movieService: ApiTMDBService,
@@ -45,133 +41,164 @@ export class SearchpagePage implements OnInit{
   ) {
     this.searchForm = this.fb.group({
       query: [''],
-      year: [''],
-      genre: [''],
-      language: [''],
-      rating: ['']
+      year: [null],
+      genre: [null],
+      language: ['en'],
+      rating: [null]
     });
   }
+
   async ngOnInit(): Promise<void> {
     const user = await firstValueFrom(this.repoService.getCurrentUser$());
+    if(user == null){
+      this.router.navigate(['/login']);
+    }
     this.currentUserId = user?.id || null;
+    await this.loadGenres();
     this.ionViewWillEnter();
   }
-  //Habilita sidemenu
+
   ionViewWillEnter() {
     this.menu.enable(true);
   }
-  async searchMovies() {
-  try {
-    this.hasSearched = true;
-    this.isLoading = true;
-    this.errorMessage = '';
-    
-    const searchParams = this.searchForm.value;
-    console.log('Searching with params:', searchParams);
-    
-    const response = await this.movieService.searchMovies(searchParams).toPromise();
-    console.log('API Response:', response);
-    
-    if (response?.results) {
-      this.movies = [...this.movies, ...this.searchResults];
-      this.searchResults = response.results;
-    } else {
-      this.errorMessage = 'No results found';
-      this.searchResults = [];
+
+  async loadGenres() {
+    try {
+      const response: any = await this.movieService.getGenres(this.mediaType).toPromise();
+      this.genres = response.genres;
+    } catch (error) {
+      console.error('Failed to load genres:', error);
     }
-  } catch (error) {
-    console.error('Search error:', error);
-    this.errorMessage = 'Failed to search movies. Please try again.';
-    this.searchResults = [];
-  } finally {
-    this.isLoading = false;
   }
-}
+
+  async search() {
+    this.isLoading = true;
+    this.hasSearched = true;
+    
+    try {
+      let response: any;
+      const formValue = this.searchForm.value;
+
+      if (formValue.query) {
+        response = await this.movieService.search(this.mediaType, formValue.query).toPromise();
+      } else {
+        response = await this.movieService.discover({
+          mediaType: this.mediaType,
+          year: formValue.year,
+          genre: formValue.genre,
+          rating: formValue.rating,
+          language: formValue.language
+        }).toPromise();
+      }
+
+      this.searchResults = response.results;
+      
+      if (this.searchResults.length === 0) {
+        this.errorMessage = `No ${this.mediaType === 'movie' ? 'movies' : 'TV shows'} found. Try different filters.`;
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      this.errorMessage = 'Search failed. Please try again.';
+    } finally {
+      this.isLoading = false;
+    }
+  }
 
   clearFilters() {
+    this.searchForm.reset({
+      language: 'en',
+      rating: null,
+      genre: null,
+      year: null,
+      query: ''
+    });
     this.hasSearched = false;
-    this.searchForm.reset({ query: this.searchForm.value.query });
     this.searchResults = [];
+    this.errorMessage = '';
   }
-  //Indica string com o caminho para ir buscar a imagem a api
+
   getImagePath(posterPath: string | null): string {
     return this.movieService.getFullImagePath(posterPath);
   }
-  //Fallback pra caso filme nao tenha imagem valida
+
   handleImageError(event: any) {
-    //Caminho para imagem default
     event.target.src = 'assets/images/no-poster.jpg';
     event.target.style.objectFit = 'contain'; 
   }
-  //Func para redirecionar para pagina do filme
-  openMovieInfo(movieId: number) {
-    this.router.navigate(['/movieinfo', movieId]);
-  }
-  //Força deteccao de mudanças nos dados para o angular atualizar quaze instantaneamente
+
+  openDetails(id: number) {
+      if (this.mediaType === 'movie') {
+        this.router.navigate(['/movieinfo', id]);
+      } else {
+        this.router.navigate(['/showinfo', id]);
+      } 
+   }
+
   async checkMoviesStatus() {
-    //Atribui ao array existente um array com exatamente os mesmos dados para forçar update
-    this.movies = [...this.movies];
+    this.searchResults = [...this.searchResults];
   }
 
-  //Verifica se o filme esta na lista de liked do user
-  isLiked(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de liked do user
+  isLiked(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getLikedList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
-  //Verifica se o filme esta na lista de favourite do user
-  isFavorite(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de favourite do user
+  isFavorite(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getFavouritesList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
-  //Verifica se o filme esta na lista de watchlater do user
-  isWatchLater(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de watchlater do user
+  isWatchLater(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getWatchLaterList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
-  // Da toggle individual ao icone de favourites do filme indicado se estiver na lista
   async toggleLike(movieId: number) {
-    console.log("clicked");
-    //Verifica se ha user loggado
     if (!this.currentUserId) return;
-    console.log("past here");
-    //Se ja estiver na lista retira, senao adiciona
-    await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString());
-    //Força update
+    if(this.mediaType=="tv"){
+      await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString(),"tv");
+    }else{
+      await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString(),"movie");
+    }
     await this.checkMoviesStatus();
   }
 
-  // Da toggle individual ao icone de favourites do filme indicado se estiver na lista
   async toggleFavorite(movieId: number) {
-    //Verifica se ha user loggado
     if (!this.currentUserId) return;    
-    //Se ja estiver na lista retira, senao adiciona 
-    await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString());
-    //Força update
+    if(this.mediaType=="tv"){
+      await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString(),"tv");
+    }else{
+      await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString(),"movie");
+    }    
     await this.checkMoviesStatus();
   }
 
-  // Da toggle individual ao icone de watch later do filme indicado se estiver na lista
   async toggleWatchLater(movieId: number) {
-    //Verifica se ha user loggado
     if (!this.currentUserId) return;
-    //Se ja estiver na lista retira, senao adiciona
-    await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString());
-    //Força update
+    if(this.mediaType=="tv"){
+      await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString(),"tv");
+    }else{
+      await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString(),"movie");
+    }    
     await this.checkMoviesStatus();
   }
+
+  // Add this method to handle media type changes
+  onMediaTypeChange() {
+    this.clearFilters();
+    this.loadGenres();
+  }
+ 
 }

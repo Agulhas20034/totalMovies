@@ -29,6 +29,23 @@ export interface Result {
   vote_count: number
 }
 
+export interface Shows {
+  adult: boolean
+  backdrop_path?: string
+  genre_ids: number[]
+  id: number
+  origin_country: string[]
+  original_language: string
+  original_name: string
+  overview: string
+  popularity: number
+  poster_path?: string
+  first_air_date: string
+  name: string
+  vote_average: number
+  vote_count: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -47,6 +64,11 @@ export class ApiTMDBService {
       `${environment.baseUrl}/movie/${id}?api_key=${environment.apiKey}`
     );
   }
+  getTvShowDetails(tvId: string){
+    return this.http.get(
+      `${environment.baseUrl}/tv/${tvId}?api_key=${environment.apiKey}`  
+  );
+}
   getMovieDetailsO(id: string): Observable<Result> {
     return this.http.get<Result>(`${environment.baseUrl}/movie/${id}`);
 }
@@ -61,45 +83,51 @@ export class ApiTMDBService {
     return posterPath ? environment.images + "/w500" + posterPath : 'assets/no-poster.jpg';
   }
   
-  searchMovies(params: {
-    query: string;
-    year?: string;
-    with_genres?: string;
-    language?: string;
-    'vote_average.gte'?: string;
-    page?: number
-  }): Observable<any> {
-    // Set up default parameters
-    let httpParams = new HttpParams()
-      .set('api_key', environment.apiKey)
-      .set('query', params.query)
-      .set('include_adult', 'false');
-
-    // Add optional parameters if they exist
-    if (params.year) {
-      httpParams = httpParams.set('year', params.year);
-    }
-    if (params.with_genres) {
-      httpParams = httpParams.set('with_genres', params.with_genres);
-    }
-    if (params.language) {
-      httpParams = httpParams.set('language', params.language);
-    }
-    if (params['vote_average.gte']) {
-      httpParams = httpParams.set('vote_average.gte', params['vote_average.gte']);
-    }
-    if (params.page) {
-      httpParams = httpParams.set('page', params.page.toString());
-    }
-
-    return this.http.get(`${environment.baseUrl}/search/movie`, { params: httpParams });
+ getGenres(mediaType: 'movie' | 'tv') {
+    return this.http.get(`${environment.baseUrl}/genre/${mediaType}/list`, {
+      params: { api_key: environment.apiKey }
+    });
   }
 
-  getGenres(): Observable<any> {
-    return this.http.get(`${environment.baseUrl}/genre/movie/list?api_key=${environment.apiKey}`);
+  search(mediaType: 'movie' | 'tv', query: string) {
+    return this.http.get(`${environment.baseUrl}/search/${mediaType}`, {
+      params: {
+        api_key: environment.apiKey,
+        query: query
+      }
+    });
+  }
+
+  discover(params: {
+    mediaType: 'movie' | 'tv',
+    year?: number,
+    genre?: number,
+    rating?: number,
+    language?: string
+  }) {
+    const requestParams: any = {
+      api_key: environment.apiKey,
+      sort_by: 'popularity.desc'
+    };
+
+    // Add media type specific parameters
+    if (params.mediaType === 'movie') {
+      if (params.year) requestParams.primary_release_year = params.year;
+    } else {
+      if (params.year) requestParams.first_air_date_year = params.year;
+    }
+
+    if (params.genre) requestParams.with_genres = params.genre;
+    if (params.rating) requestParams['vote_average.gte'] = params.rating;
+    if (params.language) requestParams.with_original_language = params.language;
+
+    return this.http.get(`${environment.baseUrl}/discover/${params.mediaType}`, {
+      params: requestParams
+    });
   }
 
   getLanguages(): Observable<any> {
     return this.http.get(`${environment.baseUrl}/configuration/languages?api_key=${environment.apiKey}`);
   }
+  
 }

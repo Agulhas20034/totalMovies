@@ -2,11 +2,17 @@ import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
 import * as CordovaSQLiteDriver from 'localforage-cordovasqlitedriver';
 import { BehaviorSubject } from 'rxjs';
+
+export interface MediaItem {
+  id: string;
+  mediaType: 'movie' | 'tv';
+}
+
 export interface Lista {
     id: number;
     id_user: number;
     nome: 'liked' | 'favourites' | 'watch later';
-    items: string[];
+    items: MediaItem[];
 }
 
 export interface Reviews {
@@ -120,53 +126,60 @@ export class RepoService {
     }
 
     //Adiciona ou remove item á lista de liked do user
-    async toggleLikedItem(userId: number, itemId: string): Promise<boolean> {
-    return this.toggleListItem(userId, 'liked', itemId);
+    async toggleLikedItem(userId: number, itemId: string,mediaType: 'movie' | 'tv' = 'movie'): Promise<boolean> {
+    return this.toggleListItem(userId, 'liked', itemId,mediaType);
     }
 
     //Adiciona ou remove item á lista de favourite do user
-    async toggleFavouriteItem(userId: number, itemId: string): Promise<boolean> {
-        return this.toggleListItem(userId, 'favourites', itemId);
+    async toggleFavouriteItem(userId: number, itemId: string,mediaType: 'movie' | 'tv' = 'movie'): Promise<boolean> {
+        return this.toggleListItem(userId, 'favourites', itemId,mediaType);
     }
 
     //Adiciona ou remove item á lista de watchlater do user
-    async toggleWatchLaterItem(userId: number, itemId: string): Promise<boolean> {
-        return this.toggleListItem(userId, 'watch later', itemId);
+    async toggleWatchLaterItem(userId: number, itemId: string,mediaType: 'movie' | 'tv' = 'movie'): Promise<boolean> {
+        return this.toggleListItem(userId, 'watch later', itemId, mediaType);
     }
 
     
     async toggleListItem(
     userId: number,
     listName: 'liked' | 'favourites' | 'watch later',
-    itemId: string
+    itemId: string,
+    mediaType: 'movie' | 'tv'
     ): Promise<boolean> {
-        try {
-            await this.init();
-            
-            const list = this.bd.listas.find(
-                l => l.id_user === userId && l.nome === listName
-            );
+    try {
+        await this.init();
+        
+        const list = this.bd.listas.find(
+        l => l.id_user === userId && l.nome === listName
+        );
 
-            if (!list) {
-                console.error(`List ${listName} not found for user ${userId}`);
-                return false;
-            }
-
-            // Adiciona a lista se nao existir e remove se existir
-            const itemIndex = list.items.indexOf(itemId);
-            if (itemIndex === -1) {
-                list.items.push(itemId);  // Adiciona a lista
-            } else {
-                list.items.splice(itemIndex, 1);  // Tira da lista
-            }
-
-            //Salva os dados
-            await this.saveToStorage();
-            return true;
-        } catch (error) {
-            console.error(`Error toggling item in ${listName}:`, error);
-            return false;
+        if (!list) {
+        console.error(`List ${listName} not found for user ${userId}`);
+        return false;
         }
+        
+        // Create the MediaItem object
+        const newItem: MediaItem = { id: itemId, mediaType: mediaType };
+        
+        // Check if item exists in the list
+        const itemIndex = list.items.findIndex(item => 
+        item.id === itemId && item.mediaType === mediaType
+        );
+
+        // Add or remove from list
+        if (itemIndex === -1) {
+        list.items.push(newItem);  // Add the MediaItem object
+        } else {
+        list.items.splice(itemIndex, 1);  // Remove from list
+        }
+
+        await this.saveToStorage();
+        return true;
+    } catch (error) {
+        console.error(`Error toggling item in ${listName}:`, error);
+        return false;
+    }
     }
 
     //Devolve lista liked do user pedido user

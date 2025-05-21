@@ -31,11 +31,11 @@ export class MainpagePage implements OnInit {
   
   async ngOnInit() {
     const user = await firstValueFrom(this.repoService.getCurrentUser$());
-    this.currentUserId = user?.id || null;
-    this.ionViewWillEnter();
     if(user == null){
       this.router.navigate(['/login']);
     }
+    this.currentUserId = user?.id || null;
+    this.ionViewWillEnter();
     this.currentUserId = user?.id || null;
     await this.loadMovies();
   }
@@ -73,34 +73,31 @@ export class MainpagePage implements OnInit {
     this.movies = [...this.movies];
   }
 
-  //Verifica se o filme esta na lista de liked do user
-  isLiked(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de liked do user
+  isLiked(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getLikedList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
-  //Verifica se o filme esta na lista de favourite do user
-  isFavorite(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de favourite do user
+  isFavorite(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getFavouritesList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
-  //Verifica se o filme esta na lista de watchlater do user
-  isWatchLater(movieId: number): boolean {
-    //Verifica se ha user loggado
+  // Verifica se o filme/série está na lista de watchlater do user
+  isWatchLater(movieId: number, mediaType: 'movie' | 'tv' = 'movie'): boolean {
     if (!this.currentUserId) return false;
-    //Carrega a lista
     const list = this.repoService.getWatchLaterList(this.currentUserId);
-    //Verifica a lista
-    return list?.items.includes(movieId.toString()) || false;
+    return list?.items.some(item => 
+      item.id === movieId.toString() && item.mediaType === mediaType
+    ) || false;
   }
 
   // Da toggle individual ao icone de favourites do filme indicado se estiver na lista
@@ -110,7 +107,7 @@ export class MainpagePage implements OnInit {
     if (!this.currentUserId) return;
     console.log("past here");
     //Se ja estiver na lista retira, senao adiciona
-    await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString());
+    await this.repoService.toggleLikedItem(this.currentUserId, movieId.toString(), "movie");
     //Força update
     await this.checkMoviesStatus();
   }
@@ -120,7 +117,7 @@ export class MainpagePage implements OnInit {
     //Verifica se ha user loggado
     if (!this.currentUserId) return;    
     //Se ja estiver na lista retira, senao adiciona 
-    await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString());
+    await this.repoService.toggleFavouriteItem(this.currentUserId, movieId.toString(), "movie");
     //Força update
     await this.checkMoviesStatus();
   }
@@ -130,7 +127,7 @@ export class MainpagePage implements OnInit {
     //Verifica se ha user loggado
     if (!this.currentUserId) return;
     //Se ja estiver na lista retira, senao adiciona
-    await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString());
+    await this.repoService.toggleWatchLaterItem(this.currentUserId, movieId.toString(), "movie");
     //Força update
     await this.checkMoviesStatus();
   }

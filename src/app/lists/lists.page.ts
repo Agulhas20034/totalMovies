@@ -1,185 +1,214 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { RepoService } from 'src/app/services/repositorio/repo.service';
-import { ApiTMDBService } from 'src/app/services/API/api-tmdb.service';
+import { RepoService, MediaItem } from 'src/app/services/repositorio/repo.service';
+import { ApiTMDBService, Result, Shows } from 'src/app/services/API/api-tmdb.service';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
 import { MenuController } from '@ionic/angular';
+
+// Define media type if not imported from repo.service
+type MediaType = 'movie' | 'tv';
+
+type MediaListItem = Result | Shows;
 
 @Component({
   standalone:false,
   selector: 'app-lists',
   templateUrl: './lists.page.html'
 })
-export class ListsPage implements OnInit{
+export class ListsPage implements OnInit {
   listType: string = '';
-  movies: any[] = [];
+  items: MediaListItem[] = [];
   isLoading: boolean = true;
   currentUserId: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
-    public repoService: RepoService, // Changed to public for template access
-    public movieService: ApiTMDBService, // Changed to public
-    private router:Router,
+    private repoService: RepoService,
+    private movieService: ApiTMDBService,
+    private router: Router,
     private menu: MenuController,
-  ) {
+  ) {}
+
+  async ngOnInit() {
+    const user = await firstValueFrom(this.repoService.getCurrentUser$());
+    if(user == null){
+      this.router.navigate(['/login']);
+    }
     this.route.paramMap.subscribe(async params => {
       this.listType = params.get('listType') || '';
-      await this.loadMovies();
+      await this.loadItems();
     });
-  }
-  ngOnInit(): void {
     this.ionViewWillEnter();
   }
 
-  //Habilita sidemenu
   ionViewWillEnter() {
     this.menu.enable(true);
   }
 
-  private async loadMovies() {
+  private async loadItems() {
     try {
       const user = await firstValueFrom(this.repoService.getCurrentUser$());
       this.currentUserId = user?.id || null;
       
       if (!this.currentUserId) return;
 
-      let movieIds: string[] = [];
-      switch(this.listType.toLowerCase()) {
-        case 'liked': 
-          movieIds = this.repoService.getLikedList(this.currentUserId)?.items || [];
-          break;
-        case 'favorites':
-          movieIds = this.repoService.getFavouritesList(this.currentUserId)?.items || [];
-          break;
-        case 'watch-later':
-          movieIds = this.repoService.getWatchLaterList(this.currentUserId)?.items || [];
-          break;
+      const list = this.getCurrentList();
+      if (!list?.items?.length) {
+        this.items = [];
+        return;
       }
 
-      if (movieIds.length > 0) {
-        this.movies = await firstValueFrom(
-          forkJoin(
-            movieIds.map(id => 
-              this.movieService.getMovieDetails(id)
-            )
-          )
-        );
-      } else {
-        this.movies = [];
-      }
+      // Convert items to proper MediaItem format
+      const mediaItems: MediaItem[] = list.items.map(item => {
+        if (typeof item === 'string') {
+          return { id: item, mediaType: 'movie' }; // Using mediaType instead of type
+        }
+        return item;
+      });
+
+      // Fetch details for all items
+      this.items = await firstValueFrom<any>(
+        forkJoin(
+          mediaItems.map(item => {
+            if (item.mediaType === 'movie') {
+              return this.movieService.getMovieDetails(item.id);
+            } else {
+              // Handle TV show case - ensure your service has this method
+              if (typeof this.movieService.getTvShowDetails === 'function') {
+                return this.movieService.getTvShowDetails(item.id);
+              }
+              throw new Error('TV show details method not available');
+            }
+          })
+        )
+      );
     } catch (error) {
-      console.error('Error loading movies:', error);
+      console.error('Error loading items:', error);
     } finally {
       this.isLoading = false;
     }
   }
 
-  // Helper methods for checking movie status
-isLiked(movieId: number): boolean {
-  if (!this.currentUserId) return false;
-  const list = this.repoService.getLikedList(this.currentUserId);
-  return list?.items.includes(movieId.toString()) || false;
-}
-
-isFavorite(movieId: number): boolean {
-  if (!this.currentUserId) return false;
-  const list = this.repoService.getFavouritesList(this.currentUserId);
-  return list?.items.includes(movieId.toString()) || false;
-}
-
-isWatchLater(movieId: number): boolean {
-  if (!this.currentUserId) return false;
-  const list = this.repoService.getWatchLaterList(this.currentUserId);
-  return list?.items.includes(movieId.toString()) || false;
-}
-
-// Modified toggle methods to properly handle last movie case
-async toggleLike(movie: any) {
-  if (!this.currentUserId) return;
-  
-  // Get current state before toggling
-  const wasLiked = this.isLiked(movie.id);
-  
-  // 1. Update storage
-  await this.repoService.toggleLikedItem(this.currentUserId, movie.id.toString());
-  
-  // 2. Update UI
-  if (this.listType === 'liked') {
-    if (wasLiked) {
-      // Remove from view
-      this.movies = this.movies.filter(m => m.id !== movie.id);
-      
-      // Clear completely if it was the last movie
-      if (this.movies.length === 0) {
-        this.movies = [];
-      }
+  private getCurrentList() {
+    if (!this.currentUserId) return null;
+    
+    switch(this.listType.toLowerCase()) {
+      case 'liked': 
+        return this.repoService.getLikedList(this.currentUserId);
+      case 'favorites':
+        return this.repoService.getFavouritesList(this.currentUserId);
+      case 'watch-later':
+        return this.repoService.getWatchLaterList(this.currentUserId);
+      default:
+        return null;
     }
-  } else {
-    this.checkMoviesStatus();
   }
-}
 
-async toggleFavorite(movie: any) {
-  if (!this.currentUserId) return;
-  
-  const wasFavorite = this.isFavorite(movie.id);
-  await this.repoService.toggleFavouriteItem(this.currentUserId, movie.id.toString());
-  
-  if (this.listType === 'favorites') {
-    if (wasFavorite) {
-      this.movies = this.movies.filter(m => m.id !== movie.id);
-      
-      // Clear completely if it was the last movie
-      if (this.movies.length === 0) {
-        this.movies = [];
-      }
+  getMediaType(item: MediaListItem): MediaType {
+    return 'title' in item ? 'movie' : 'tv';
+  }
+
+  isLiked(itemId: number, mediaType: MediaType): boolean {
+    if (!this.currentUserId) return false;
+    const list = this.repoService.getLikedList(this.currentUserId);
+    return list?.items.some(item => 
+      item.id === itemId.toString() && 
+      (typeof item === 'string' ? 'movie' : (item as MediaItem).mediaType) === mediaType
+    ) || false;
+  }
+
+  isFavorite(itemId: number, mediaType: MediaType): boolean {
+    if (!this.currentUserId) return false;
+    const list = this.repoService.getFavouritesList(this.currentUserId);
+    return list?.items.some(item => 
+      item.id === itemId.toString() && 
+      (typeof item === 'string' ? 'movie' : (item as MediaItem).mediaType) === mediaType
+    ) || false;
+  }
+
+  isWatchLater(itemId: number, mediaType: MediaType): boolean {
+    if (!this.currentUserId) return false;
+    const list = this.repoService.getWatchLaterList(this.currentUserId);
+    return list?.items.some(item => 
+      item.id === itemId.toString() && 
+      (typeof item === 'string' ? 'movie' : (item as MediaItem).mediaType) === mediaType
+    ) || false;
+  }
+
+  async toggleLike(item: MediaListItem) {
+    if (!this.currentUserId) return;
+    
+    const mediaType = this.getMediaType(item);
+    await this.repoService.toggleLikedItem(
+      this.currentUserId, 
+      item.id.toString(),
+      mediaType
+    );
+    
+    if (this.listType === 'liked') {
+      this.items = this.items.filter(i => i.id !== item.id);
     }
-  } else {
-    this.checkMoviesStatus();
+    this.checkItemsStatus();
   }
-}
 
-async toggleWatchLater(movie: any) {
-  if (!this.currentUserId) return;
-  
-  const wasWatchLater = this.isWatchLater(movie.id);
-  await this.repoService.toggleWatchLaterItem(this.currentUserId, movie.id.toString());
-  
-  if (this.listType === 'watch-later') {
-    if (wasWatchLater) {
-      this.movies = this.movies.filter(m => m.id !== movie.id);
-      
-      // Clear completely if it was the last movie
-      if (this.movies.length === 0) {
-        this.movies = [];
-      }
+  async toggleFavorite(item: MediaListItem) {
+    if (!this.currentUserId) return;
+    
+    const mediaType = this.getMediaType(item);
+    await this.repoService.toggleFavouriteItem(
+      this.currentUserId, 
+      item.id.toString(),
+      mediaType
+    );
+    
+    if (this.listType === 'favorites') {
+      this.items = this.items.filter(i => i.id !== item.id);
     }
-  } else {
-    this.checkMoviesStatus();
-  }
-}
-
-// Force UI update
-checkMoviesStatus() {
-  this.movies = [...this.movies];
-}
-
-  // Utility functions
-  formatTitle(str: string): string {
-    return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    this.checkItemsStatus();
   }
 
-  formatYear(dateStr: string): string {
+  async toggleWatchLater(item: MediaListItem) {
+    if (!this.currentUserId) return;
+    
+    const mediaType = this.getMediaType(item);
+    await this.repoService.toggleWatchLaterItem(
+      this.currentUserId, 
+      item.id.toString(),
+      mediaType
+    );
+    
+    if (this.listType === 'watch-later') {
+      this.items = this.items.filter(i => i.id !== item.id);
+    }
+    this.checkItemsStatus();
+  }
+
+  checkItemsStatus() {
+    this.items = [...this.items];
+  }
+
+  getItemTitle(item: MediaListItem): string {
+    return 'title' in item ? item.title : item.name;
+  }
+
+  getItemYear(item: MediaListItem): string {
+    const dateStr = 'release_date' in item ? item.release_date : item.first_air_date;
     return dateStr ? new Date(dateStr).getFullYear().toString() : '';
+  }
+
+  getItemPoster(item: MediaListItem): string | undefined {
+    return item.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+      : 'assets/images/no-poster.jpg';
   }
 
   handleImageError(event: any) {
     event.target.src = 'assets/images/no-poster.jpg';
   }
-  //Func para redirecionar para pagina do filme
-  openMovieInfo(movieId: number) {
-    this.router.navigate(['/movieinfo', movieId]);
+
+  openDetails(item: MediaListItem) {
+    const route = this.getMediaType(item) === 'movie' ? '/movieinfo' : '/showinfo';
+    this.router.navigate([route, item.id]);
   }
 }

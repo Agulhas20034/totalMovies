@@ -32,13 +32,18 @@ const routes: Routes = [
     loadChildren: () => import('./movieinfo/movieinfo.module').then(m => m.MovieinfoPageModule)
   },
   {
+    path: 'showinfo',
+    loadChildren: () => import('./showinfo/showinfo.module').then( m => m.ShowinfoPageModule)
+  },
+  {
   path: 'lists/:listType',
     loadChildren: () => import('./lists/lists.module').then(m => m.ListsPageModule)
   },
   {
     path: '**',
     redirectTo: 'initialpage'
-  }
+  },
+  
 ];
 
 @NgModule({

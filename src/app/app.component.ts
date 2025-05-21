@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationStart, Router } from '@angular/router';
 import { RepoService } from 'src/app/services/repositorio/repo.service';
 
 @Component({
@@ -14,7 +14,12 @@ export class AppComponent {
   constructor(
     private repoService: RepoService,
     private router: Router
-  ) {}
+    
+  ) {this.router.events.subscribe(event => {
+    if (event instanceof NavigationStart) {
+      console.log('Route change:', event.url);
+    }
+  });}
 
   public appPages = [
     { title: 'Main Page', url: '/mainpage', icon: 'home' },

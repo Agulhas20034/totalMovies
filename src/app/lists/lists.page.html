@@ -1,56 +1,56 @@
 <ion-content>
   <div class="list-container ion-padding">
-    
-    
     <div class="list-header">
       <ion-buttons slot="start">
         <ion-menu-button></ion-menu-button>
       </ion-buttons>
       <h1 class="list-title">
-        <span style="color:black" *ngIf="listType === 'liked'">❤️ Liked Movies</span>
-        <span style="color:black"*ngIf="listType === 'favorites'">⭐ Favorite Movies</span>
-        <span style="color:black"*ngIf="listType === 'watch-later'">⏱️ Watch Later Movies</span>
+        <span style="color:black" *ngIf="listType === 'liked'">❤️ Liked</span>
+        <span style="color:black" *ngIf="listType === 'favorites'">⭐ Favorites</span>
+        <span style="color:black" *ngIf="listType === 'watch-later'">⏱️ Watch Later</span>
       </h1>
-      <ion-badge color="light" class="counter-badge">{{ movies.length }} movies</ion-badge>
+      <ion-badge color="light" class="counter-badge">{{ items.length }} items</ion-badge>
     </div>
     
     <!-- Loading state -->
     <div *ngIf="isLoading" class="loading-spinner">
       <ion-spinner name="crescent"></ion-spinner>
-      <p>Loading your movies...</p>
+      <p>Loading your items...</p>
     </div>
 
-    <!-- Movie grid -->
+    <!-- Media grid -->
     <ion-grid *ngIf="!isLoading" class="movie-grid">
       <ion-row>
-        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let movie of movies">
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let item of items">
           <ion-card class="movie-card">
-            <!-- Clickable movie info area -->
-            <div class="clickable-area" (click)="openMovieInfo(movie.id)">
-              <img [src]="movie.poster_path ? movieService.getFullImagePath(movie.poster_path) : 'assets/images/no-poster.jpg'"
-                   (error)="handleImageError($event)" class="movie-poster" alt="{{ movie.title }} poster">
+            <!-- Clickable media info area -->
+            <div class="clickable-area" (click)="openDetails(item)">
+              <img [src]="getItemPoster(item)"
+                   (error)="handleImageError($event)" 
+                   class="movie-poster" 
+                   [alt]="getItemTitle(item) + ' poster'">
               
               <ion-card-header>
-                <ion-card-title class="movie-title">{{ movie.title }}</ion-card-title>
-                <ion-card-subtitle class="movie-year">{{ formatYear(movie.release_date) }}</ion-card-subtitle>
+                <ion-card-title class="movie-title">{{ getItemTitle(item) }}</ion-card-title>
+                <ion-card-subtitle class="movie-year">{{ getItemYear(item) }}</ion-card-subtitle>
               </ion-card-header>
             </div>
 
             <ion-card-content>
               <div class="action-buttons">
-                <ion-button fill="clear" (click)="toggleLike(movie); $event.stopPropagation()" class="action-button">
-                  <ion-icon [name]="isLiked(movie.id) ? 'heart' : 'heart-outline'" 
-                           [color]="isLiked(movie.id) ? 'danger' : 'medium'"></ion-icon>
+                <ion-button fill="clear" (click)="toggleLike(item); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isLiked(item.id, getMediaType(item)) ? 'heart' : 'heart-outline'" 
+                           [color]="isLiked(item.id, getMediaType(item)) ? 'danger' : 'medium'"></ion-icon>
                 </ion-button>
                 
-                <ion-button fill="clear" (click)="toggleFavorite(movie); $event.stopPropagation()" class="action-button">
-                  <ion-icon [name]="isFavorite(movie.id) ? 'star' : 'star-outline'"
-                           [color]="isFavorite(movie.id) ? 'warning' : 'medium'"></ion-icon>
+                <ion-button fill="clear" (click)="toggleFavorite(item); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isFavorite(item.id, getMediaType(item)) ? 'star' : 'star-outline'"
+                           [color]="isFavorite(item.id, getMediaType(item)) ? 'warning' : 'medium'"></ion-icon>
                 </ion-button>
                 
-                <ion-button fill="clear" (click)="toggleWatchLater(movie); $event.stopPropagation()" class="action-button">
-                  <ion-icon [name]="isWatchLater(movie.id) ? 'time' : 'time-outline'"
-                           [color]="isWatchLater(movie.id) ? 'primary' : 'medium'"></ion-icon>
+                <ion-button fill="clear" (click)="toggleWatchLater(item); $event.stopPropagation()" class="action-button">
+                  <ion-icon [name]="isWatchLater(item.id, getMediaType(item)) ? 'time' : 'time-outline'"
+                           [color]="isWatchLater(item.id, getMediaType(item)) ? 'primary' : 'medium'"></ion-icon>
                 </ion-button>
               </div>
             </ion-card-content>
@@ -59,10 +59,10 @@
       </ion-row>
 
       <!-- Empty state -->
-      <div *ngIf="!isLoading && movies.length === 0" class="empty-state">
+      <div *ngIf="!isLoading && items.length === 0" class="empty-state">
         <ion-icon name="film-outline" class="empty-icon"></ion-icon>
-        <h3 style="color:black">No movies here yet</h3>
-        <p style="color:black">Start adding movies to your {{ 
+        <h3 style="color:black">No items here yet</h3>
+        <p style="color:black">Start adding items to your {{ 
           listType === 'liked' ? 'Liked' : 
           listType === 'favorites' ? 'Favorites' : 
           'Watch Later' 

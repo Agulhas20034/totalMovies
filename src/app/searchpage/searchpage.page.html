@@ -1,18 +1,25 @@
 <ion-header>
-  
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Search Movies</ion-title>
+    <ion-title slot="start">Search</ion-title>
   </ion-toolbar>
+  <ion-segment [(ngModel)]="mediaType" (ionChange)="onMediaTypeChange()">
+      <ion-segment-button value="movie">
+        <ion-label>Movies</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="tv">
+        <ion-label>TV Shows</ion-label>
+      </ion-segment-button>
+    </ion-segment>
 </ion-header>
 
 <ion-content>
-  <form [formGroup]="searchForm" (ngSubmit)="searchMovies()">
+  <form [formGroup]="searchForm" (ngSubmit)="search()">
     <ion-searchbar style="color:black;"
       formControlName="query" 
-      placeholder="Search for movies..." 
+      [placeholder]="'Search for ' + (mediaType === 'movie' ? 'movies...' : 'TV shows...')" 
       animated
       debounce="500">
     </ion-searchbar>
@@ -25,12 +32,18 @@
         <div slot="content">
           <ion-item>
             <ion-label position="stacked">Year</ion-label>
-            <ion-input type="number" formControlName="year" placeholder="2023"></ion-input>
+            <ion-input 
+              type="number" 
+              formControlName="year" 
+              [placeholder]="mediaType === 'movie' ? 'Release year' : 'First air year'"
+              min="1900"
+              [max]="currentYear">
+            </ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Genre</ion-label>
-            <ion-select formControlName="genre" placeholder="Select genre">
+            <ion-select formControlName="genre" interface="popover">
               <ion-select-option *ngFor="let genre of genres" [value]="genre.id">
                 {{ genre.name }}
               </ion-select-option>
@@ -39,17 +52,16 @@
 
           <ion-item>
             <ion-label position="stacked">Language</ion-label>
-            <ion-select formControlName="language" placeholder="Select language">
+            <ion-select formControlName="language" interface="popover">
               <ion-select-option value="en">English</ion-select-option>
               <ion-select-option value="es">Spanish</ion-select-option>
               <ion-select-option value="fr">French</ion-select-option>
-              <!-- Add more languages as needed -->
             </ion-select>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Minimum Rating</ion-label>
-            <ion-range formControlName="rating" min="0" max="10" step="1" snaps>
+            <ion-range formControlName="rating" min="0" max="10" step="0.5" snaps pin>
               <ion-label slot="start">0</ion-label>
               <ion-label slot="end">10</ion-label>
             </ion-range>
@@ -68,53 +80,58 @@
     </ion-button>
   </form>
 
-
+  <!-- Search Results -->
   <div *ngIf="searchResults.length > 0" class="ion-padding">
-    <ion-card *ngFor="let movie of searchResults" class="movie-card">
-      <div (click)="openMovieInfo(movie.id)">
-      <div class="image-container">
+    <ion-card *ngFor="let item of searchResults" class="movie-card" style="margin-bottom: 20px;">
+      <div (click)="openDetails(item.id)">
+        <div class="image-container">
           <ion-img 
-            [src]="getImagePath(movie.poster_path)"
-            [alt]="movie.title + ' poster'"
+            [src]="getImagePath(item.poster_path)"
+            [alt]="(mediaType === 'movie' ? item.title : item.name) + ' poster'"
             (ionError)="handleImageError($event)"
           ></ion-img>
+        </div>
+        <ion-card-header>
+          <ion-card-title>{{ mediaType === 'movie' ? item.title : item.name }}</ion-card-title>
+          <ion-card-subtitle>
+            {{ (mediaType === 'movie' ? item.release_date : item.first_air_date) | date:'yyyy' }}
+            • Rating: {{ item.vote_average }}
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          {{ (item.overview || 'No overview available') | slice:0:150 }}{{ item.overview?.length > 150 ? '...' : '' }}
+        </ion-card-content>
       </div>
-      <ion-card-header>
-        <ion-card-title>{{ movie.title }}</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-          {{ movie.overview }}
-      </ion-card-content>
-      </div>
-      <div style="display: flex; justify-content: center; gap: 8px;">
-        <ion-button (click)="toggleLike(movie.id)" fill="clear">
+      
+      <div style="display: flex; justify-content: center; gap: 8px; padding-bottom: 10px;">
+        <ion-button (click)="toggleLike(item.id)" fill="clear">
           <ion-icon 
-            [name]="isLiked(movie.id) ? 'heart' : 'heart-outline'" 
-            [color]="isLiked(movie.id) ? 'danger' : 'medium'"
+            [name]="isLiked(item.id) ? 'heart' : 'heart-outline'" 
+            [color]="isLiked(item.id) ? 'danger' : 'medium'"
           ></ion-icon>
         </ion-button>
 
-        <ion-button (click)="toggleFavorite(movie.id)" fill="clear">
+        <ion-button (click)="toggleFavorite(item.id)" fill="clear">
           <ion-icon 
-            [name]="isFavorite(movie.id) ? 'star' : 'star-outline'" 
-            [color]="isFavorite(movie.id) ? 'warning' : 'medium'"
+            [name]="isFavorite(item.id) ? 'star' : 'star-outline'" 
+            [color]="isFavorite(item.id) ? 'warning' : 'medium'"
           ></ion-icon>
         </ion-button>
 
-        <ion-button (click)="toggleWatchLater(movie.id)" fill="clear">
+        <ion-button (click)="toggleWatchLater(item.id)" fill="clear">
           <ion-icon 
-            [name]="isWatchLater(movie.id) ? 'bookmark' : 'bookmark-outline'" 
-            [color]="isWatchLater(movie.id) ? 'primary' : 'medium'"
+            [name]="isWatchLater(item.id) ? 'bookmark' : 'bookmark-outline'" 
+            [color]="isWatchLater(item.id) ? 'primary' : 'medium'"
           ></ion-icon>
         </ion-button>
       </div>
     </ion-card>
   </div>
 
-  <!-- Display when no search has been made -->
+  <!-- Empty State -->
   <div *ngIf="!hasSearched" class="ion-padding ion-text-center">
     <ion-icon name="search-outline" style="font-size: 64px; color: var(--ion-color-medium)"></ion-icon>
-    <h3 style="color: black;">Search for movies</h3>
-    <p>Use the search bar above to find your favorite movies</p>
+    <h3 style="color: black;">Search for {{ mediaType === 'movie' ? 'movies' : 'TV shows' }}</h3>
+    <p>Use the search bar above to find your favorite {{ mediaType === 'movie' ? 'movies' : 'TV shows' }}</p>
   </div>
 </ion-content>

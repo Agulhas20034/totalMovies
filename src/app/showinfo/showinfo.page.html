@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && show">
+
+    <ion-card class="show-card">
+      <ion-card-header>
+        <ion-card-title>{{ show?.name || 'TV Show Details' }}</ion-card-title>
+        <br><br>
+        <ion-card-subtitle>
+          {{ show.first_air_date | date:'yyyy' }} • {{ getSeasonsCount() }} • {{ getGenres() }}
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="poster-container">
+          <ion-img 
+            [src]="getImagePath(show.poster_path)"
+            [alt]="show.name + ' poster'"
+            (ionError)="handleImageError($event)"
+          ></ion-img>
+        </div>
+
+        <div class="details-container">
+          <h3>Overview</h3>
+          <p>{{ show.overview || 'No overview available' }}</p>
+
+          <div *ngIf="show.vote_average" class="rating">
+            <ion-icon name="star" color="warning"></ion-icon>
+            <span>{{ show.vote_average.toFixed(1) }}/10 ({{ show.vote_count }} votes)</span>
+          </div>
+
+          <ion-button expand="block" style="--background: white; --color: black;" (click)="toggleLike(show.id)">
+            <ion-icon 
+              [name]="isLiked(show.id, 'tv') ? 'heart' : 'heart-outline'" 
+              [color]="isLiked(show.id, 'tv') ? 'danger' : 'medium'">
+            </ion-icon>
+            <span>{{ isLiked(show.id, 'tv') ? 'Liked' : 'Like' }}</span>
+          </ion-button>
+          <br>
+          <ion-button expand="block" style="--background: white; --color: black;" (click)="toggleFavorite(show.id)">
+            <ion-icon 
+              [name]="isFavorite(show.id, 'tv') ? 'star' : 'star-outline'"
+              [color]="isFavorite(show.id, 'tv') ? 'warning' : 'medium'">
+            </ion-icon>
+            <span>{{ isFavorite(show.id, 'tv') ? 'Favorited' : 'Favorite' }}</span>
+          </ion-button>
+          <br>
+          <ion-button expand="block" style="--background: white; --color: black;" (click)="toggleWatchLater(show.id)">
+            <ion-icon 
+              [name]="isWatchLater(show.id, 'tv') ? 'bookmark' : 'bookmark-outline'"
+              [color]="isWatchLater(show.id, 'tv') ? 'secondary' : 'medium'">
+            </ion-icon>
+            <span>{{ isWatchLater(show.id, 'tv') ? 'Saved' : 'Watch Later' }}</span>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
